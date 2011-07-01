@@ -28,11 +28,11 @@ Example:
 
 = Cool! And can it also minify the CSS output? =
 
-Sure it can! Just provide the --minify option.
+Sure it can! Just provide the --minimize option.
 
 Example:
 
-  cat stylesheet.scss | python sass.py --minify
+  cat stylesheet.scss | python sass.py --minimize
 
 
 = Great! But is there also an interactive mode? =
