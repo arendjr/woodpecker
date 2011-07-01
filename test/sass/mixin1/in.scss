@@ -1,0 +1,14 @@
+@mixin large-text {
+  font: {
+    family: Arial;
+    size: 20px;
+    weight: bold;
+  }
+  color: #ff0000;
+}
+
+.page-title {
+  @include large-text;
+  padding: 4px;
+  margin-top: 10px;
+}

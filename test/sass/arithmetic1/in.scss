@@ -1,0 +1,12 @@
+.arithmetic {
+    first: 1px + 1px;
+    second: 1px + 1px + 1px;
+    third: 1px + 2px * 3px;
+    fourth: 1px + 2px + 3px * 4px;
+    fifth: 1px + 2px * 3px + 4px;
+    sixth: 1px * 2px + 3px + 4px;
+    seventh: 1px * 2px + 3px * 4px;
+    eighth: (10px / 2px);
+    ninth: 10px % 2px;
+    tenth: 1px - 1px;
+}

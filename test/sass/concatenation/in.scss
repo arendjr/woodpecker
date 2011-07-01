@@ -1,0 +1,7 @@
+.concatentation {
+    first: "string" + "string";
+    second: "string" + ident;
+    third: ident + "string";
+    fourth: ident + ident;
+    fifth: "string" + ident + "string";
+}

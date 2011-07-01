@@ -1,0 +1,7 @@
+#main {
+  color: black;
+  a {
+    font-weight: bold;
+    &:hover { color: red; }
+  }
+}
