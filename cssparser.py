@@ -649,10 +649,10 @@ class CSSToken(object):
             if not stream.isIdentifierStart(offset + 1):
                 return self.createChild(CSSDeclarationToken)
 
-            # the character was a colon, and an identifier followed, but
-            # the first identifier could still mean anything...
             while character != CSS_EOF:
-                (character, offset) = stream.findFirstDelimiter("{};:", offset)
+                # the character was a colon, and an identifier followed, but
+                # the first identifier could still mean anything...
+                (character, offset) = stream.findFirstDelimiter("{};:", offset + 1)
                 if character == "{":
                     return self.createChild(CSSRuleSetToken)
                 if character in "};" or not stream.isIdentifierStart(offset + 1):
@@ -859,7 +859,7 @@ class CSSRuleSetToken(CSSToken):
             if stream.isIdentifierStart():
                 if options.compileScss:
                     token = self.performRuleSetVersusDeclarationLookAhead(stream)
-                    if token:
+                    if token != None:
                         return token
 
                 return self.createChild(CSSDeclarationToken)
