@@ -1,0 +1,93 @@
+
+  Woodpecker
+
+= What is Woodpecker? =
+
+Woodpecker is a SCSS compiler written in Python. Basically it is a
+reimplementation of Sass: http://sass-lang.com
+
+In addition, Woodpecker provides built-in support for all mixins and functions
+provided by the Compass framework: http://compass-style.org
+
+
+= How can I use Woodpecker? =
+
+Currently? Not. It is still in an early stage of development.
+
+But if you really want to try it out, please read on...
+
+
+= Okay, I really want to try it out. How can I process my SCSS? =
+
+Easy, just run the sass.py script and provide it with SCSS as standard input.
+
+Example:
+
+  cat stylesheet.scss | python sass.py
+
+
+= Cool! And can it also minify the CSS output? =
+
+Sure it can! Just provide the --minify option.
+
+Example:
+
+  cat stylesheet.scss | python sass.py --minify
+
+
+= Great! But is there also an interactive mode? =
+
+Well, as a matter of fact, yes there is! Just use the -i option.
+
+Example:
+
+  python sass.py -i
+
+Note that the interactive console also processes expressions right now, so you
+can't do variable assignments... yet.
+
+
+= So, do you actually test this? =
+
+Yep, there's a test suite included as well. It's in the test directory.
+
+Try it out:
+
+  python test_sass.py
+
+
+= Can I also use it programmatically, as part of a build script for example? =
+
+Actually, that's what it was intended for all along! I have no extensive
+documentation for you, but it goes something like this:
+
+  import cssparser
+  import scsscompiler
+  import scssimporter
+
+  parser = cssparser.CSSParser()
+  # provide some options you like to pass, for example:
+  options = cssparser.CSSOptions(stripWhiteSpace = True, stripComments = True,
+                                 minimizeValues = True, stripExtraSemicolons = True,
+                                 colorize = False, compileScss = True)
+  styleSheet = parser.parse(inputString, options)
+
+  scssimporter.Importer.addPath("other/woodpecker/stylesheets") # to get the Compass
+                                                                # imports to work
+  compiler = scsscompiler.SCSSCompiler()
+  compiler.compile(styleSheet, options)
+  outputString = styleSheet.toString(options)
+
+
+= Thanks so much! I'll eagerly await your final release! =
+
+My pleasure! And if you have any comments or suggestions, just let me know!
+You'll be able to find me on GitHub, Twitter and Google+. My username is
+arendjr.
+
+Cheers!
+- Arend van Beelen jr.
+
+PS.: I also like to thank my employer, Hyves, for letting me work on this partly
+in their time. Check them out: http://www.hyves.nl/hybrid
+
