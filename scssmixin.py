@@ -10,9 +10,9 @@ class SCSSMixin(SCSSFunction):
         return token.clone()
 
     def evaluate(self, callerScope, arguments = None):
-        #try:
+        try:
             scope = self.scope.clone()
-            if arguments:
+            if arguments != None:
                 self.mapArguments(arguments, callerScope, scope)
     
             body = self.body.clone()
@@ -21,5 +21,5 @@ class SCSSMixin(SCSSFunction):
             compiler.setGlobalScope(scope)
             compiler.compile(body)
             return body.children[1:-1]
-        #except Exception, exception:
-        #    raise SCSSRunTimeError(str(exception) + "\n  In call to mixin " + self.name)
+        except Exception, exception:
+            raise SCSSRunTimeError(str(exception) + "\n  In call to mixin " + self.name)

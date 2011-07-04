@@ -275,12 +275,18 @@ class CSSStream(object):
         return self.peek(offset) in "'\""
 
     def isStringChar(self, offset = 0):
+        character = self.peek(offset)
+        if character == CSS_EOF:
+            return False
         return (self.isUrlChar(offset) or
-                self.peek(offset) == " " or
-                (self.peek(offset) == "\\" and self.isNewline(offset + 1)))
+                character == " " or
+                (character == "\\" and self.isNewline(offset + 1)))
 
     def isUrlChar(self, offset = 0):
-        val = ord(self.peek(offset))
+        character = self.peek(offset)
+        if character == CSS_EOF:
+            return False
+        val = ord(character)
         return (val == 9 or val == 33 or (val >= 25 and val <= 126 and val != 41) or
                 self.isNonAscii() or
                 self.isEscape())
@@ -720,6 +726,9 @@ class CSSAtRuleToken(CSSToken):
 
         if stream.current() == "{":
             return self.createChild(CSSBlockToken)
+
+        if stream.current() == "}":
+            raise CSSParseError("Invalid character '%s' in stream" % stream.current(), stream, self)
 
         return self.createChild(CSSAnyToken)
 

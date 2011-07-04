@@ -42,6 +42,16 @@ def compact(list):
     return scssvariables.SCSSList.fromVariables(compactList)
 
 
+def first_value_of(value):
+    if isinstance(value, scssvariables.SCSSList):
+        if len(value.items) > 0:
+            return value.items[0]
+        else:
+            return None
+    else:
+        return value
+
+
 def function_if(condition, value1, value2):
     if condition:
         return value1
@@ -64,6 +74,13 @@ def opacify(color, opacity):
         raise SCSSRunTimeError("Opacity argument to opacify() should be a number or percentage, not a dimension in %s units" % opacity.unit)
 
     return scssvariables.SCSSColor([color.r, color.g, color.b, (1.0 - color.a) * opacity + color.a])
+
+
+def quote(token):
+    if not isinstance(token, scssvariables.SCSSToken):
+        raise SCSSRunTimeError("quote() only works on tokens, not on \"%s\"" % token.toString())
+
+    return scssvariables.SCSSString(token.token.toString())
 
 
 def transparentize(color, opacity):
@@ -101,10 +118,20 @@ def type_of(value):
     raise SCSSRunTimeError("Unknown type of \"%s\"" % value.toString)
 
 
+def unquote(string):
+    if not isinstance(string, scssvariables.SCSSString):
+        raise SCSSRunTimeError("unquote() only works on strings, not on \"%s\"" % string.toString())
+
+    return scssvariables.SCSSToken(cssparser.CSSIdentifier(None, string.value))
+
+
 FUNCTIONS = [
     SCSSBuiltinFunction(compact, numArgs = -1),
+    SCSSBuiltinFunction(first_value_of),
     SCSSBuiltinFunction(function_if, name = "if"),
     SCSSBuiltinFunction(opacify),
+    SCSSBuiltinFunction(quote),
     SCSSBuiltinFunction(transparentize),
-    SCSSBuiltinFunction(type_of)
+    SCSSBuiltinFunction(type_of),
+    SCSSBuiltinFunction(unquote)
 ]

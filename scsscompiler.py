@@ -28,6 +28,9 @@ class SCSSCompiler(object):
     def pushScope(self):
         self.scopes.append(SCSSScope(self.scopes[-1]))
 
+    def pushScope(self):
+        self.scopes.append(SCSSScope(self.scopes[-1]))
+
     def popScope(self):
         if len(self.scopes) == 1:
             raise SCSSRunTimeError("Dude, are you trying to kill me? Don't touch my global scope, please.")
@@ -121,7 +124,7 @@ class SCSSCompiler(object):
             raise SCSSCompileError("Mixin is missing a name", token)
 
         blockToken = nameToken.getNextSibling(True)
-        if not blockToken or not blockToken.isBlock():
+        if blockToken == None or not blockToken.isBlock():
             raise SCSSCompileError("Mixin is missing a body", blockToken or token)
 
         mixin = scssmixin.SCSSMixin(name, self.getCurrentScope(), arguments, blockToken)
@@ -256,7 +259,8 @@ class SCSSCompiler(object):
             if ampersand:
                 while ampersand:
                     for child in reversed(parentSelector.getStrippedChildren()):
-                        child.copyAfter(ampersand)
+                        if not child.isDelimiter("&"):
+                            child.copyAfter(ampersand)
                     selector.removeChild(ampersand)
                     ampersand = selector.getAmpersand()
             else:

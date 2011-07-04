@@ -162,7 +162,7 @@ class SCSSFunction(object):
                     raise SCSSCompileError("Missing argument $%s in call to %s %s" % (name, self.typeName(), self.name), token.parent)
 
     def evaluate(self, callerScope, arguments = None):
-        #try:
+        try:
             scope = self.scope.clone()
             if arguments:
                 self.mapArguments(arguments, callerScope, scope)
@@ -183,5 +183,5 @@ class SCSSFunction(object):
                     raise SCSSRunTimeError("Unexpected token in function %s" % self.name, token)
     
             raise SCSSRunTimeError("Function %s does not return a value" % self.name)
-        #except Exception, exception:
-        #    raise SCSSRunTimeError(str(exception) + "\n  In call to function " + self.name)
+        except Exception, exception:
+            raise SCSSRunTimeError(str(exception) + "\n  In call to function " + self.name)
