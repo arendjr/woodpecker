@@ -33,6 +33,12 @@ def minimizeColorValue(token):
     variable = scssvariables.SCSSColor(token)
     return variable.toString()
 
+def tokenListToString(tokenList, options = CSSOptions()):
+    string = ""
+    for token in tokenList:
+        string += token.toString(options)
+    return string
+
 
 CSS_EOF = "EOF"
 CSS_UNKNOWN_VALUE = "UNKNOWN"
@@ -626,6 +632,12 @@ class CSSToken(object):
 
         return None
 
+    def getStyleSheet(self):
+        token = self
+        while token and not token.isStyleSheet():
+            token = token.parent
+        return token
+
     def ownIndex(self):
         if self.parent == None:
             raise CSSParseError("Cannot determine own index of token without parent", self)
@@ -681,6 +693,7 @@ class CSSStyleSheetToken(CSSToken):
     def __init__(self):
         CSSToken.__init__(self, [CSSAtRuleToken, CSSRuleSetToken, CSSWhiteSpaceToken, CSSCommentToken, SCSSAssignmentToken], None)
         self.path = "."
+        self.ruleSets = []
 
     def setPath(self, path):
         self.path = path
@@ -694,6 +707,19 @@ class CSSStyleSheetToken(CSSToken):
             return self.createChild(CSSAtRuleToken)
 
         return self.createChild(CSSRuleSetToken)
+
+    def adopt(self, token):
+        CSSToken.adopt(self, token)
+        if isinstance(token, CSSRuleSetToken):
+            self.ruleSets.append(token)
+
+    def reject(self, token):
+        CSSToken.reject(self, token)
+        if isinstance(token, CSSRuleSetToken):
+            self.ruleSets.remove(token)
+
+    def getRuleSets(self):
+        return self.ruleSets
 
     def toString(self, options = CSSOptions()):
         string = ""
@@ -848,7 +874,7 @@ class CSSBlockToken(CSSToken):
 class CSSRuleSetToken(CSSToken):
     def __init__(self, parent):
         CSSToken.__init__(self, [CSSAtRuleToken, CSSRuleSetToken, CSSSelectorToken, CSSDeclarationToken, CSSDelimiterToken, SCSSAssignmentToken, CSSWhiteSpaceToken, CSSCommentToken], parent)
-        self.hasSelector = False
+        self.selector = None
         self.isOpened = False
 
     def process(self, stream, options = CSSOptions()):
@@ -888,18 +914,25 @@ class CSSRuleSetToken(CSSToken):
                 self.createDelimiterChild(stream)
                 return self
 
-            if not self.hasSelector:
-                self.hasSelector = True
+            if self.selector == None:
                 return self.createChild(CSSSelectorToken)
 
         raise CSSParseError("Invalid character '%s' in stream" % stream.current(), stream, self)
 
-    def getSelector(self):
-        for token in self.children:
-            if token.isSelector():
-                return token
+    def adopt(self, token):
+        CSSToken.adopt(self, token)
+        if isinstance(token, CSSSelectorToken):
+            self.selector = token
 
-        raise CSSParseError("Rule set does not have selector", token = self)
+    def reject(self, token):
+        CSSToken.reject(self, token)
+        if self.selector == token:
+            self.selector = None
+
+    def getSelector(self):
+        if self.selector == None:
+            raise CSSParseError("Rule set does not have selector", token = self)
+        return self.selector
 
     def getDeclarations(self):
         declarations = []
@@ -981,12 +1014,10 @@ class CSSSelectorToken(CSSToken):
     def toString(self, options = CSSOptions()):
         string = ""
         for token in self.children:
-            if options.stripWhiteSpace and token.isWhiteSpace():
-                if token.isLastChild():
-                    continue
+            if options.stripWhiteSpace and token.isWhiteSpace() and token.isLastChild():
+                continue
             string += token.toString(CSSOptions(options, colorize = False))
         return colorize(string, "00;36") if options.colorize else string
-
 
 class CSSDeclarationToken(CSSToken):
     def __init__(self, parent):

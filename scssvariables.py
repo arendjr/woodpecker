@@ -1,3 +1,4 @@
+import colorsys
 import operator
 import string
 import types
@@ -523,28 +524,19 @@ class SCSSColor(SCSSVariable):
         if self.isRgbValue():
             return
 
-        if self.l <= 0.5:
-            m2 = self.l * (self.s + 1)
-        else:
-            m2 = self.l + self.s + (self.l * self.s)
-        m1 = (self.l * 2) - m2
+        (self.r, self.g, self.b) = colorsys.hls_to_rgb(self.h, self.l, self.s)
+        self.h = 0.0
+        self.s = 0.0
+        self.l = 0.0
 
-        self.setRgbValue(self.hueToRgb(m1, m2, self.h + 1.0/3.0),
-                         self.hueToRgb(m1, m2, self.h),
-                         self.hueToRgb(m1, m2, self.h - 1.0/3.0))
+    def convertToHsl(self):
+        if not self.isRgbValue():
+            return
 
-    def hueToRgb(self, m1, m2, h):
-        if h < 0.0:
-            h += 1.0
-        elif h > 1.0:
-            h -= 1.0
-        if h * 6.0 < 1.0:
-            return m1 + ((m2 - m1) * h * 6.0)
-        if h * 2.0 < 1.0:
-            return m2
-        if h * 3.0 < 2.0:
-            return m1 + ((m2 - m1) * (2.0/3.0 - h) * 6.0)
-        return m1
+        (self.h, self.l, self.s) = colorsys.rgb_to_hls(self.r, self.g, self.b)
+        self.r = 0.0
+        self.g = 0.0
+        self.b = 0.0
 
     def keywordToColor(self, keyword):
         if keyword in COLOR_MAP:
@@ -560,6 +552,14 @@ class SCSSColor(SCSSVariable):
                 return keyword
 
         return None
+
+    def darken(self, amount):
+        self.convertToHsl()
+        self.l = clamp(self.l - amount, 0.0, 1.0)
+
+    def lighten(self, amount):
+        self.convertToHsl()
+        self.l = clamp(self.l + amount, 0.0, 1.0)
 
     def __add__(self, operand):
         if isinstance(operand, SCSSList):

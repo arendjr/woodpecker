@@ -42,6 +42,17 @@ def compact(list):
     return scssvariables.SCSSList.fromVariables(compactList)
 
 
+def darken(color, amount):
+    if not color.isColor():
+        raise SCSSRunTimeError("Can only darken colors, not \"%s\"" % color.toString())
+    if not amount.isNumber():
+        raise SCSSRunTimeError("Cannot darken color \"%s\" by \"%s\"" % (color.toString(), amount.toString()))
+
+    result = scssvariables.SCSSColor(color)
+    result.darken(amount.value / 100.0 if amount.unit == "%" else amount.value)
+    return result
+
+
 def first_value_of(value):
     if isinstance(value, scssvariables.SCSSList):
         if len(value.items) > 0:
@@ -57,6 +68,17 @@ def function_if(condition, value1, value2):
         return value1
     else:
         return value2
+
+
+def lighten(color, amount):
+    if not color.isColor():
+        raise SCSSRunTimeError("Can only lighten colors, not \"%s\"" % color.toString())
+    if not amount.isNumber():
+        raise SCSSRunTimeError("Cannot lighten color \"%s\" by \"%s\"" % (color.toString(), amount.toString()))
+
+    result = scssvariables.SCSSColor(color)
+    result.lighten(amount.value / 100.0 if amount.unit == "%" else amount.value)
+    return result
 
 
 def opacify(color, opacity):
@@ -127,8 +149,10 @@ def unquote(string):
 
 FUNCTIONS = [
     SCSSBuiltinFunction(compact, numArgs = -1),
+    SCSSBuiltinFunction(darken),
     SCSSBuiltinFunction(first_value_of),
     SCSSBuiltinFunction(function_if, name = "if"),
+    SCSSBuiltinFunction(lighten),
     SCSSBuiltinFunction(opacify),
     SCSSBuiltinFunction(quote),
     SCSSBuiltinFunction(transparentize),

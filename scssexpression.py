@@ -122,6 +122,10 @@ class SCSSExpression(object):
                     arguments = token.getArguments(includeCommas = True)
                     value = function.evaluate(scope, arguments)
                     self.value.replaceAt(i, 1, value.toToken())
+                else:
+                    expression = SCSSExpression(token.children)
+                    expression.evaluate(scope)
+                    token.children = expression.tokens
             else:
                 priority = self.priorityFromToken(token)
 

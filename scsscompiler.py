@@ -68,6 +68,8 @@ class SCSSCompiler(object):
         elif token.isRuleSet():
             self.compileRuleSet(token)
             self.popScope()
+        elif token.isAtRule() and token.getKeyWord() == "extend":
+            self.processExtend(token)
 
     def compileAtRule(self, token, options):
         keyword = token.getKeyWord()
@@ -292,3 +294,15 @@ class SCSSCompiler(object):
         if ((token.isString() or token.isIdentifier()) and
             token.data.find("#{") > -1):
             token.replaceWith(SCSSExpression.processInterpolation(token, self.getCurrentScope()))
+
+    def processExtend(self, token):
+        ruleSets = token.getStyleSheet().getRuleSets()
+        options = cssparser.CSSOptions(stripWhiteSpace = True)
+        signatureString = cssparser.tokenListToString(token.getSignature(), options)
+        for ruleSet in ruleSets:
+            selector = ruleSet.getSelector()
+            if selector.toString(options) == signatureString:
+                selector.createDelimiterChild(",")
+                for child in token.getSignature():
+                    selector.add(child.clone())
+        token.remove()
