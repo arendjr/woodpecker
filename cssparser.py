@@ -638,6 +638,12 @@ class CSSToken(object):
             token = token.parent
         return token
 
+    def getParentRuleSet(self):
+        token = self
+        while token and not token.isRuleSet():
+            token = token.parent
+        return token
+
     def ownIndex(self):
         if self.parent == None:
             raise CSSParseError("Cannot determine own index of token without parent", self)
@@ -1298,7 +1304,7 @@ class CSSAnyToken(CSSToken):
         url = self.data[4:-1].strip()
         if options.minimizeValues:
             if ((url[0] == "'" and url[-1] == "'") or
-                (url[1] == '"' and url[-1] == '"')):
+                (url[0] == '"' and url[-1] == '"')):
                 character = ""
                 stream = CSSStream(url[1:-1], options)
                 urlCharsOnly = True

@@ -310,12 +310,13 @@ class SCSSCompiler(object):
 
     def processExtend(self, token):
         ruleSets = token.getStyleSheet().getRuleSets()
+        mySelector = token.getParentRuleSet().getSelector()
         options = cssparser.CSSOptions(stripWhiteSpace = True)
         signatureString = cssparser.tokenListToString(token.getSignature(), options)
         for ruleSet in ruleSets:
             selector = ruleSet.getSelector()
             if selector.toString(options) == signatureString:
                 selector.createDelimiterChild(",")
-                for child in token.getSignature():
+                for child in mySelector.getStrippedChildren():
                     selector.add(child.clone())
         token.remove()
