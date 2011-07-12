@@ -154,7 +154,7 @@ class SCSSExpression(object):
                         i += 1
                         previousToken = token
 
-                        operator = token.data
+                        operator = "not"
                         operand1 = self.evaluate(scope, priority, nextIndex, processSlash = True)
                         operand2 = None
                         if operand1 == None:
@@ -163,7 +163,13 @@ class SCSSExpression(object):
                         previousToken = token.getPreviousSibling(True)
                         if not previousToken:
                             i += 1
-                            continue
+                            if token.isOperator("-"): # unary operator
+                                previousToken = token
+                                operator = "-"
+                                operand1 = scssvariables.SCSSNumber(0)
+                                operand2 = self.evaluate(scope, priority, nextIndex, processSlash = True)
+                            else:
+                                continue
                         else:
                             # little special treatment for the / operator
                             if (token.isOperator("/") and not processSlash and

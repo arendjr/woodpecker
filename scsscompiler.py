@@ -254,21 +254,34 @@ class SCSSCompiler(object):
             return
 
         parentSelector = token.getSelector()
-        parentSubSelectors = None
+        parentSubSelectors = parentSelector.getSubSelectors()
         for ruleSet in reversed(nestedRules):
             selector = ruleSet.getSelector()
+
             ampersand = selector.getAmpersand()
             if ampersand:
-                while ampersand:
-                    for child in reversed(parentSelector.getStrippedChildren()):
-                        if not child.isDelimiter("&"):
-                            child.copyAfter(ampersand)
-                    selector.removeChild(ampersand)
-                    ampersand = selector.getAmpersand()
-            else:
-                if parentSubSelectors == None:
-                    parentSubSelectors = parentSelector.getSubSelectors()
+                elderly = []
+                sibling = ampersand.getPreviousSibling()
+                while sibling:
+                    elderly.insert(0, sibling)
+                    sibling = sibling.getPreviousSibling()
+                youngsters = []
+                sibling = ampersand.getNextSibling()
+                while sibling:
+                    youngsters.append(sibling)
+                    sibling = sibling.getNextSibling()
 
+                selector.children = []
+                for sub1 in parentSubSelectors:
+                    for child in elderly:
+                        selector.add(child.clone())
+                    for child in sub1:
+                        selector.add(child.clone())
+                    for child in youngsters:
+                        selector.add(child.clone())
+                    selector.createDelimiterChild(",")
+                selector.getLastChild().remove() # remove last comma
+            else:
                 subSelectors = selector.getSubSelectors()
                 selector.children = []
                 for sub1 in parentSubSelectors:
@@ -277,9 +290,9 @@ class SCSSCompiler(object):
                             selector.add(child.clone())
                         selector.createSpaceChild()
                         for child in sub2:
-                            selector.add(child)
+                            selector.add(child.clone())
                         selector.createDelimiterChild(",")
-                selector.setChildren(selector.children[0:-1]) # remove last comma
+                selector.getLastChild().remove() # remove last comma
 
             token.removeChild(ruleSet)
             ruleSet.insertAfter(token)
