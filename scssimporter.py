@@ -27,7 +27,7 @@ class SCSSImporter(object):
         extension = ".scss" if len(fileName) < 5 or fileName[-5] != ".scss" else ""
         paths = copy.copy(self.paths)
         paths.append(myStyleSheet.path)
-	importPath = ""
+        importPath = ""
         for prefix in paths:
             path = prefix + "/" + fileName + extension
             (dir, file) = os.path.split(path)
