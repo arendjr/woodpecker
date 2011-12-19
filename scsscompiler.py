@@ -164,10 +164,13 @@ class SCSSCompiler(object):
                (len(nameToken.data) < 6 or nameToken.data[-5:-1] != ".css") and
                (not nextToken or nextToken.isDelimiter(",;"))):
 
-            foundImport = True
-            fileName = nameToken.data[1:-1]
-            import scssimporter
-            scssimporter.Importer.importScss(self.getCurrentScope(), token, fileName, options)
+            try:
+                foundImport = True
+                resource = nameToken.data[1:-1]
+                import scssimporter
+                scssimporter.Importer.importScss(self.getCurrentScope(), token, resource, options)
+            except Exception, exception:
+                raise SCSSCompileError(str(exception) + " while importing resource " + resource)
 
             if nextToken:
                 nameToken = nextToken.getNextSibling(True)
@@ -260,27 +263,29 @@ class SCSSCompiler(object):
 
             ampersand = selector.getAmpersand()
             if ampersand:
-                elderly = []
-                sibling = ampersand.getPreviousSibling()
-                while sibling:
-                    elderly.insert(0, sibling)
-                    sibling = sibling.getPreviousSibling()
-                youngsters = []
-                sibling = ampersand.getNextSibling()
-                while sibling:
-                    youngsters.append(sibling)
-                    sibling = sibling.getNextSibling()
+                while ampersand:
+                    elderly = []
+                    sibling = ampersand.getPreviousSibling()
+                    while sibling:
+                        elderly.insert(0, sibling)
+                        sibling = sibling.getPreviousSibling()
+                    youngsters = []
+                    sibling = ampersand.getNextSibling()
+                    while sibling:
+                        youngsters.append(sibling)
+                        sibling = sibling.getNextSibling()
 
-                selector.children = []
-                for sub1 in parentSubSelectors:
-                    for child in elderly:
-                        selector.add(child.clone())
-                    for child in sub1:
-                        selector.add(child.clone())
-                    for child in youngsters:
-                        selector.add(child.clone())
-                    selector.createDelimiterChild(",")
-                selector.getLastChild().remove() # remove last comma
+                    selector.children = []
+                    for sub1 in parentSubSelectors:
+                        for child in elderly:
+                            selector.add(child.clone())
+                        for child in sub1:
+                            selector.add(child.clone())
+                        for child in youngsters:
+                            selector.add(child.clone())
+                        selector.createDelimiterChild(",")
+                    selector.getLastChild().remove() # remove last comma
+                    ampersand = selector.getAmpersand()
             else:
                 subSelectors = selector.getSubSelectors()
                 selector.children = []
@@ -315,8 +320,13 @@ class SCSSCompiler(object):
         signatureString = cssparser.tokenListToString(token.getSignature(), options)
         for ruleSet in ruleSets:
             selector = ruleSet.getSelector()
-            if selector.toString(options) == signatureString:
-                selector.createDelimiterChild(",")
-                for child in mySelector.getStrippedChildren():
-                    selector.add(child.clone())
+            for sub1 in selector.getSubSelectors():
+                if cssparser.tokenListToString(sub1, options) == signatureString:
+                    for sub2 in mySelector.getSubSelectors():
+                        if selector.getLastChild().isWhiteSpace():
+                            selector.getLastChild().remove()
+                        selector.createDelimiterChild(",")
+                        for child in sub2:
+                            selector.add(child.clone())
+                    break
         token.remove()
