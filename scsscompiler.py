@@ -275,6 +275,7 @@ class SCSSCompiler(object):
                         youngsters.append(sibling)
                         sibling = sibling.getNextSibling()
 
+                    ampersand = None
                     selector.children = []
                     for sub1 in parentSubSelectors:
                         for child in elderly:
@@ -282,10 +283,12 @@ class SCSSCompiler(object):
                         for child in sub1:
                             selector.add(child.clone())
                         for child in youngsters:
-                            selector.add(child.clone())
+                            clone = child.clone()
+                            selector.add(clone)
+                            if not ampersand and child.isDelimiter("&"):
+                                ampersand = clone
                         selector.createDelimiterChild(",")
                     selector.getLastChild().remove() # remove last comma
-                    ampersand = selector.getAmpersand()
             else:
                 subSelectors = selector.getSubSelectors()
                 selector.children = []
