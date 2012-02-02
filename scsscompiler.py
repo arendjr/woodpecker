@@ -70,6 +70,8 @@ class SCSSCompiler(object):
             self.popScope()
         elif token.isAtRule() and token.getKeyWord() == "extend":
             self.processExtend(token)
+        elif token.isAtRule() and token.getKeyWord() == "media":
+            self.processMediaQuery(token)
 
     def compileAtRule(self, token, options):
         keyword = token.getKeyWord()
@@ -333,3 +335,59 @@ class SCSSCompiler(object):
                             selector.add(child.clone())
                     break
         token.remove()
+
+    def processMediaQuery(self, token):
+        while not token.parent.isStyleSheet():
+            parent = token.parent
+            if parent.isRuleSet():
+                ruleSet = None
+                for child in token.getBlock().children[:]:
+                    if child.isRuleSet():
+                        selector = child.getSelector()
+                        subSelectors = selector.getSubSelectors()
+                        selector.setChildren([])
+                        for sub1 in parent.getSelector().getSubSelectors():
+                            for sub2 in subSelectors:
+                                for sub1Child in sub1:
+                                    selector.adopt(sub1Child.clone())
+                                selector.createDelimiterChild(" ")
+                                for sub2Child in sub2:
+                                    selector.adopt(sub2Child.clone())
+                                selector.createDelimiterChild(",")
+                        selector.getLastChild().remove() # remove last comma
+                    elif child.isDeclaration():
+                        if ruleSet == None:
+                            ruleSet = cssparser.CSSRuleSetToken(token.getBlock())
+                            ruleSet.insertAfter(token.getBlock().children[0])
+                            ruleSet.add(parent.getSelector().clone())
+                            ruleSet.createDelimiterChild("{")
+                        child.remove()
+                        ruleSet.add(child)
+                        ruleSet.createDelimiterChild(";")
+                    elif not child.isDelimiter("{}"):
+                        child.remove()
+                if ruleSet:
+                    ruleSet.createDelimiterChild("}")
+            elif parent.isAtRule():
+                parentBlock = parent.getBlock()
+                cssparser.CSSIdentifierToken(parent, "and").insertBefore(parentBlock)
+                for child in token.children:
+                    if child.isBlock():
+                        while parentBlock.getLastChild().isWhiteSpace() or parentBlock.getLastChild().isDelimiter("}"):
+                            parentBlock.removeChild(parentBlock.getLastChild())
+                        for grandChild in child.children:
+                            if not grandChild.isDelimiter("{}"):
+                                parentBlock.add(grandChild)
+                        parentBlock.createDelimiterChild("}")
+                        break
+                    if not child.isAtKeyword():
+                        child.insertBefore(parentBlock)
+
+                token.remove()
+                break
+
+            token.remove()
+            parent.parent.add(token)
+
+            if parent.isRuleSet() and len(parent.getDeclarations()) == 0:
+                parent.remove()
