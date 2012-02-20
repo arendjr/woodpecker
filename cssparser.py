@@ -557,10 +557,10 @@ class CSSToken(object):
 
     def isComment(self):
         return isinstance(self, CSSCommentToken)
-    
+
     def isWhiteSpace(self):
         return isinstance(self, CSSWhiteSpaceToken)
-    
+
     def isBoundary(self):
         return (isinstance(self, CSSBlockToken) or
                 (isinstance(self, CSSAnyToken) and self.type in [CSS_LIST_VALUE, CSS_DELIM_VALUE]))

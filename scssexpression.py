@@ -101,6 +101,10 @@ class SCSSExpression(object):
             return scssvariables.SCSSList.fromTokens(expression.tokens, scope)
 
     def evaluate(self, scope = None, parentPriority = 0, startIndex = 0, processSlash = False):
+        str = ""
+        for token in self.tokens[startIndex:]:
+            str += token.toString(cssparser.CSSOptions(colorize = True))
+
         i = startIndex
         returnTokens = []
         while i < len(self.tokens) and len(returnTokens) == 0:
@@ -122,10 +126,6 @@ class SCSSExpression(object):
                     arguments = token.getArguments(includeCommas = True)
                     value = function.evaluate(scope, arguments)
                     self.value.replaceAt(i, 1, value.toToken())
-                else:
-                    expression = SCSSExpression(token.children)
-                    expression.evaluate(scope)
-                    token.children = expression.tokens
             else:
                 priority = self.priorityFromToken(token)
 
@@ -134,7 +134,7 @@ class SCSSExpression(object):
                     while j > startIndex:
                         if (not self.tokens[j].isWhiteSpace() and
                             not self.tokens[j].isComment()):
-                            returnTokens = self.tokens[startIndex:i - 1]
+                            returnTokens = self.tokens[startIndex:j - 1]
                             break
                         j -= 1
                     if len(returnTokens) > 0:
@@ -161,7 +161,18 @@ class SCSSExpression(object):
                             break
                     else:
                         previousToken = token.getPreviousSibling(True)
-                        if not previousToken:
+                        if previousToken:
+                            # little special treatment for the / operator
+                            if (token.isOperator("/") and not processSlash and
+                                not previousToken.isVariable() and not nextToken.isVariable()):
+                                break
+
+                            operator = token.data
+                            operand1 = scssvariables.SCSSVariable.fromToken(previousToken, scope)
+                            operand2 = self.evaluate(scope, priority, nextIndex, processSlash = True)
+                            if operand2 == None:
+                                break
+                        else:
                             i += 1
                             if token.isOperator("-"): # unary operator
                                 previousToken = token
@@ -170,25 +181,11 @@ class SCSSExpression(object):
                                 operand2 = self.evaluate(scope, priority, nextIndex, processSlash = True)
                             else:
                                 continue
-                        else:
-                            # little special treatment for the / operator
-                            if (token.isOperator("/") and not processSlash and
-                                not previousToken.isVariable() and not nextToken.isVariable()):
-                                break
-        
-                            operator = token.data
-                            operand1 = scssvariables.SCSSVariable.fromToken(previousToken, scope)
-                            operand2 = self.evaluate(scope, priority, nextIndex, processSlash = True)
-                            if operand2 == None:
-                                break
 
-                    numTokens = nextIndex - i
-                    while numTokens > 0:
+                    for j in range(0, nextIndex - i):
                         self.value.removeChildAt(i)
-                        numTokens -= 1
                     if (i > 0 and self.tokens[i - 1].isWhiteSpace() and
-                        (i == len(self.tokens) or
-                         self.tokens[i].isWhiteSpace())):
+                        (i == len(self.tokens) or self.tokens[i].isWhiteSpace())):
                         self.value.removeChildAt(i - 1)
 
                     result = operand1.apply(operator, operand2).toToken()
@@ -205,10 +202,8 @@ class SCSSExpression(object):
             if len(returnTokens) == 0:
                 returnTokens = self.tokens[startIndex:i]
 
-            numTokens = len(returnTokens)
-            while numTokens > 0:
+            for i in range(0, len(returnTokens)):
                 self.value.removeChildAt(startIndex)
-                numTokens -= 1
             while (len(returnTokens) > 0 and
                    (returnTokens[-1].isWhiteSpace() or returnTokens[-1].isComment())):
                 returnTokens = returnTokens[0:-1]
