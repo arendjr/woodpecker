@@ -101,10 +101,6 @@ class SCSSExpression(object):
             return scssvariables.SCSSList.fromTokens(expression.tokens, scope)
 
     def evaluate(self, scope = None, parentPriority = 0, startIndex = 0, processSlash = False):
-        str = ""
-        for token in self.tokens[startIndex:]:
-            str += token.toString(cssparser.CSSOptions(colorize = True))
-
         i = startIndex
         returnTokens = []
         while i < len(self.tokens) and len(returnTokens) == 0:

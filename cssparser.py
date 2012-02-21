@@ -1,4 +1,5 @@
 import copy
+import re
 import string
 
 
@@ -1336,12 +1337,13 @@ class CSSAnyToken(CSSToken):
     def toString(self, options = CSSOptions()):
         if len(self.children) > 0:
             string = ""
-            if options.minimizeValues and self.type == CSS_FUNCTION_VALUE:
-                name = self.getName()
-                if name in ["rgb", "rgba", "hsl", "hsla"]:
-                    string = minimizeColorValue(self)
-
-            if string == "":
+            if (options.minimizeValues and self.type == CSS_FUNCTION_VALUE and
+                self.getName() in ["rgb", "rgba", "hsl", "hsla"]):
+                string = minimizeColorValue(self)
+            elif self.type == CSS_FUNCTION_VALUE and re.match("(-[a-z]+-)?calc", self.getName()):
+                for token in self.children:
+                    string += token.toString(options)
+            else:
                 for token in self.children:
                     if options.stripWhiteSpace and token.isWhiteSpace():
                         if (token.getNextSibling().isBoundary() or
