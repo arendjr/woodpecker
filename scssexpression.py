@@ -129,15 +129,11 @@ class SCSSExpression(object):
                             value = scssvariables.SCSSVariable.fromToken(token, scope)
                             child.replaceWith(value.toToken())
                 else:
-                    arguments = token.getArguments(includeCommas = True)
-                    expression = SCSSExpression(arguments)
+                    expression = SCSSExpression(token.children)
                     expression.evaluate(scope)
                     token.children = []
-                    token.add(cssparser.CSSIdentifierToken(token, name))
-                    token.createDelimiterChild("(")
                     for child in expression.tokens:
                         token.add(child)
-                    token.createDelimiterChild(")")
 
             else:
                 priority = self.priorityFromToken(token)
