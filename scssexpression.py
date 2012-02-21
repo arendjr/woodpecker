@@ -1,4 +1,5 @@
 import cssparser
+import re
 import scssvariables
 
 from scssexceptions import *
@@ -122,6 +123,22 @@ class SCSSExpression(object):
                     arguments = token.getArguments(includeCommas = True)
                     value = function.evaluate(scope, arguments)
                     self.value.replaceAt(i, 1, value.toToken())
+                elif re.match("(-[a-z]+-)?calc", name):
+                    for child in token.children:
+                        if child.isVariable():
+                            value = scssvariables.SCSSVariable.fromToken(token, scope)
+                            child.replaceWith(value.toToken())
+                else:
+                    arguments = token.getArguments(includeCommas = True)
+                    expression = SCSSExpression(arguments)
+                    expression.evaluate(scope)
+                    token.children = []
+                    token.add(cssparser.CSSIdentifierToken(token, name))
+                    token.createDelimiterChild("(")
+                    for child in expression.tokens:
+                        token.add(child)
+                    token.createDelimiterChild(")")
+
             else:
                 priority = self.priorityFromToken(token)
 
